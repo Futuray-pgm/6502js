@@ -50,6 +50,41 @@ function SimulatorWidget(node) {
     $node.find('.stepButton').click(simulator.debugExec);
     $node.find('.gotoButton').click(simulator.gotoAddr);
     $node.find('.notesButton').click(ui.showNotes);
+    $node.find('.saveButton').click(function () {
+        let file = new Blob([$node.find('.code').val()], {type: "text/x-asm"});
+        if (window.navigator.msSaveOrOpenBlob) // IE10+
+            window.navigator.msSaveOrOpenBlob(file, "main.asm");
+        else {
+            let a = document.createElement("a");
+            let url = URL.createObjectURL(file);
+            a.href = url;
+            a.Style = "display: none;";
+            a.download = "main.asm";
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(function() {
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            }, 0);
+        }
+    });
+    $node.find('.loadButton').click(function () {
+        let fileInput = document.createElement("input");
+        fileInput.type = "file";
+        fileInput.accept = "text/x-asm, text/plain";
+        fileInput.style = "display: none;";
+        fileInput.click();
+        fileInput.addEventListener('change', function() {
+            let file = this.files[0];
+            if (file) {
+                let reader = new FileReader();
+                reader.addEventListener("load", () => {
+                    $node.find('.code').val(reader.result);
+                });
+                reader.readAsText(file);
+            }
+        })
+    });
     $node.find('.code').keypress(simulator.stop);
     $node.find('.code').keypress(ui.initialize);
     $(document).keypress(memory.storeKeypress);
